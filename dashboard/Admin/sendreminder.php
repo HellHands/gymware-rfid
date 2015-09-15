@@ -1,4 +1,4 @@
-﻿
+
 <?php
 require 'db_conn.php';
 page_protect();
@@ -313,81 +313,44 @@ echo date('Z');
 				</div>
 				<div class="row-fluid">
 					<div class="span12">
-						<div class="box box-color box-bordered">
-							<div class="box-title">
-								<h3>
-									<i class="icon-inbox"></i>
-									Unpaid Members List
-								</h3>
-							</div>
-							<div class="box-content nopadding">
-								<table class="table table-nomargin dataTable dataTable-tools  table-bordered">
-									<thead>
-										<tr>
-											<th>S.No</th><th>Invoice</th><th>Member ID</th>
-											<th>Name</th><th>Email</th>
-												<th>Plan Name</th>
-<th>Date of Payment</th>
-<th>Total / Paid</th>
-<th>Balance</th>
-<th>expiry</th><th></th></tr>
-																	<tbody>
+						
+
 									<?php
-
-$query = "select * from subsciption WHERE bal>0 ORDER BY bal DESC";
-//echo $query;								<tbody>
-
+$query = "select subsciption.id, user_data.email from subsciption INNER JOIN user_data WHERE subsciption.id=user_data.id AND subsciption.bal>0";
 $result = mysqli_query($con, $query);
-$sno    = 1;
-$income = 0;
-if (mysqli_affected_rows($con) != 0) {
-    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-        $msgid   = $row['mem_id'];
-        $query1  = "select * from user_data WHERE newid='$msgid'";
-        $result1 = mysqli_query($con, $query1);
-        
-        
-        if (mysqli_affected_rows($con) == 1) {
-
-            while ($row1 = mysqli_fetch_array($result1, MYSQLI_ASSOC)) {
-                
-                
-                
-                
-                echo "<td>" . $sno . "</td>";
-                echo "<td>" . $row['invoice'] . "</td>";
-                echo "<td>" . $msgid . "</td>";
-                echo "<td>" . $row['name'] . "<img src='" . $row1['pic_add'] . "'></td>";
-                echo "<td>" . $row1['email'] . "</td>";
-                
-           
-                
-            }
-            
-
-
-        }
-        echo "<td>" . $row['sub_type_name'] . "</td>";
-        echo "<td>" . $row['paid_date'] . "</td>";
-        echo "<td>" . $row['total'] . " / " . $row['paid'] . "</td>";
-        echo "<td>" . $row['bal'] . "</td>";
-        echo "<td>" . $row['expiry'] . "</td>";
-        $sno++;
-        
-        echo "<td><form action='bal_pay.php' method='post'><input type='hidden' name='name' value='" . $row['invoice'] . "'/><input type='submit' value='Pay Balance ' class='btn btn-info'/></form></td></tr>";
-        $msgid  = 0;
-        $income = $row['bal'] + $income;
-    }
-    
+$emails = array();
+while($row=mysqli_fetch_array($result)){
+	$emails[] = $row['email'];
 }
+//echo $query;								<tbody>
+?>
 
-?>									
-									</tbody>
-								</table>
-							</div><h3>Total Unpaid Amount :<?php
-echo $income; ?>
-</h3>
-<h3><a href="sendreminder.php">Send Reminder</a></h3>
+
+<?php
+	$msg = "Please pay your dues.";	
+	$msg = wordwrap($msg, 70);
+	
+	$count = count($emails);
+	
+	for($i=0; $i<$count; $i++){
+		mail($emails[$i], "DUES Remainder", $msg);
+	}
+	
+	
+
+	
+?>
+<br><br>
+<div class="well">
+	<h1>Reminders sent successfully to following:</h1>
+	<?php 
+	for($i=0; $i<$count; $i++){
+		echo "<h4>$emails[$i]</h4>";
+		
+	}
+	?>
+	
+</div>
 
 						</div>
 					</div>
